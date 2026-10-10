@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       publish:
-        description: Publish to GitHub and Nexus (select an existing version tag)
+        description: Publish to GitHub and Nexus
         type: boolean
         default: false
 
@@ -44,12 +44,12 @@ jobs:
         run: |
           if [ "$REF_TYPE" == 'tag' ]; then
             if [[ "$RELEASE_TAG" != v* ]]; then
-              echo 'Select a stable version tag such as v1.0.1.' >&2
+              echo 'Select a stable version tag.' >&2
               exit 1
             fi
             python scripts/release.py metadata --tag "$RELEASE_TAG"
           elif [ "$MANUAL_PUBLISH" == 'true' ]; then
-            echo 'Publishing requires a version tag, not a branch.' >&2
+            echo 'Publishing requires a version tag.' >&2
             exit 1
           else
             python scripts/release.py metadata

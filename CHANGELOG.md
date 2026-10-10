@@ -1,9 +1,11 @@
 # 1.0.1
 
+## Fixes
+-  Quest journal layout displays properly now.
+
 ## Build and releases
 
-- Build against the independently maintained Somepoi.Atlyss.GameLibs NuGet package.
-- Automate GitHub and Nexus releases with the matching version changelog.
+- NuGet Package added to automate releases on Nexus and GitHub.
 
 # 1.0.0
 

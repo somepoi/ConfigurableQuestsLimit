@@ -2,30 +2,20 @@
 
 [![Nexus Mods](https://img.shields.io/badge/Nexus%20Mods-Download-DA8E35?logo=nexusmods&logoColor=white)](https://www.nexusmods.com/atlyss/mods/41?tab=description)
 
-A MelonLoader mod for ATLYSS that lets you configure the active quest limit or
-enable unlimited quests, with an expanded quest journal and paginated tracker.
+## Description
+Mod for ATLYSS that lets you configure the active quest limit remove the limit completely.
+
+Quests limit is tied to the client, so should be multiplayer-compatible.
+
+## Requirements
+- [MelonLoader](https://github.com/lavagang/melonloader) (v0.7.3)
 
 ## Installation
+1. Install [MelonLoader](https://github.com/lavagang/melonloader)
+2. Download [latest release](https://github.com/somepoi/ConfigurableQuestsLimit/releases) and extract to `Mods` folder (i.e. `"ATLYSS\Mods\ConfigurableQuestsLimit.dll"`)
 
-Install the Mono version of MelonLoader for ATLYSS, then extract the mod release
-archive into the ATLYSS game directory. It includes `Mods/ConfigurableQuestsLimit.dll`
-and `UserData/ConfigurableQuestsLimit.cfg`.
-
-If upgrading, keep your existing config instead of replacing it with the defaults.
-Set `MaxActiveQuests` (default: 10), or set `UnlimitedQuests = true` in the config.
-
-## Releases
-
-Download the mod on [Nexus Mods](https://www.nexusmods.com/atlyss/mods/41).
-Version history is in [CHANGELOG.md](CHANGELOG.md).
-
-Pushing a version tag such as `v1.0.1` makes GitHub Actions build the mod, create
-a GitHub Release, and upload the ZIP and matching changelog to Nexus.
-Compiler references come from our `Somepoi.Atlyss.GameLibs` NuGet package and
-the official MelonLoader/Harmony packages, all restored from nuget.org.
-GameLibs is maintained in [its own repository](https://github.com/somepoi/Atlyss.GameLibs).
-No game installation or local runner is needed on GitHub.
-See [the release setup guide](docs/RELEASING.md).
+## Configuration
+See `UserData/ConfigurableQuestsLimit.cfg` to configure the current limit of active quest or remove the limit completely.
 
 ## Build
 
@@ -35,7 +25,7 @@ With .NET SDK 10 installed:
 dotnet build -c Release -p:DeployToGame=false
 ```
 
-`game-libs/Versions.props` pins GameLibs, MelonLoader and Harmony versions.
-To build and install into your local game instead, omit `DeployToGame=false`
+`game-libs/Versions.props` sets GameLibs, MelonLoader and Harmony versions.
+To build and install into your local game, remove `DeployToGame=false`
 and set `GameDirectory` if needed.
 
