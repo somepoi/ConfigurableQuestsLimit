@@ -19,6 +19,9 @@ namespace ConfigurableQuestsLimit
             int count = Player._mainPlayer._pQuest._scriptableQuests.Count;
             if (!view && count <= ____questMenuCellSlots.Length)
                 return;
+            if (!TabMenu._current || !TabMenu._current._isOpen ||
+                TabMenu._current._selectedMenuCell != __instance || TabMenu._current._questPanelMode)
+                return;
             if (!view)
                 view = __instance.gameObject.AddComponent<QuestLogView>();
 

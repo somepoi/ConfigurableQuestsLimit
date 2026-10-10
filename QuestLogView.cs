@@ -17,6 +17,7 @@ namespace ConfigurableQuestsLimit
         private float stride;
         private float rowWidth;
         private bool failed;
+        private bool layoutWarningLogged;
 
         internal void Resize(ref QuestMenuCellSlot[] slots, int questCount, Button shareButton, Button abandonButton)
         {
@@ -24,8 +25,8 @@ namespace ConfigurableQuestsLimit
                 return;
             try
             {
-                if (!content)
-                    Initialize(slots, shareButton, abandonButton);
+                if (!content && !Initialize(slots, shareButton, abandonButton))
+                    return;
                 int required = Math.Max(originalSlotCount, questCount);
                 if (slots.Length == required)
                     return;
@@ -63,7 +64,7 @@ namespace ConfigurableQuestsLimit
             }
         }
 
-        private void Initialize(QuestMenuCellSlot[] slots, Button shareButton, Button abandonButton)
+        private bool Initialize(QuestMenuCellSlot[] slots, Button shareButton, Button abandonButton)
         {
             Canvas.ForceUpdateCanvases();
             var parent = slots[0].transform.parent as RectTransform;
@@ -74,12 +75,32 @@ namespace ConfigurableQuestsLimit
             for (int i = 1; i < slots.Length; i++)
                 area.Encapsulate(RowBounds(parent, (RectTransform)slots[i].transform));
             rowHeight = first.size.y;
-            rowWidth = area.size.x;
-            stride = slots.Length > 1
-                ? Mathf.Abs(first.center.y - RowBounds(parent, (RectTransform)slots[1].transform).center.y)
-                : rowHeight;
-            if (rowHeight <= 0 || rowWidth <= 0 || stride < rowHeight)
-                throw new InvalidOperationException("Quest journal has an unsupported slot layout.");
+            rowWidth = first.size.x;
+            stride = float.PositiveInfinity;
+            for (int i = 1; i < slots.Length; i++)
+            {
+                float verticalDistance = Mathf.Abs(first.center.y - RowBounds(parent,
+                    (RectTransform)slots[i].transform).center.y);
+                if (verticalDistance > 0.01f)
+                    stride = Mathf.Min(stride, verticalDistance);
+            }
+            if (float.IsInfinity(stride))
+                stride = rowHeight;
+            if (rowHeight <= 0 || rowWidth <= 0 || stride <= 0 ||
+                float.IsNaN(rowHeight) || float.IsInfinity(rowHeight) ||
+                float.IsNaN(rowWidth) || float.IsInfinity(rowWidth) ||
+                float.IsNaN(stride) || float.IsInfinity(stride))
+            {
+                if (!layoutWarningLogged)
+                {
+                    layoutWarningLogged = true;
+                    var firstRect = (RectTransform)slots[0].transform;
+                    MelonLogger.Warning($"Quest journal layout is not ready, will retry. Slots: {slots.Length}, " +
+                        $"parent rect: {parent.rect.size}, first slot rect: {firstRect.rect.size}, " +
+                        $"measured row: {rowWidth}x{rowHeight}, stride: {stride}.");
+                }
+                return false;
+            }
 
             float viewportHeight = ArrangeActionPanel(parent, slots, area, shareButton, abandonButton);
             originalSlotCount = slots.Length;
@@ -90,7 +111,7 @@ namespace ConfigurableQuestsLimit
             viewport.SetSiblingIndex(slots[0].transform.GetSiblingIndex());
             viewport.anchorMin = viewport.anchorMax = viewport.pivot = new Vector2(0, 1);
             viewport.sizeDelta = new Vector2(rowWidth, viewportHeight);
-            viewport.anchoredPosition = new Vector2(area.min.x - parent.rect.xMin, area.max.y - parent.rect.yMax);
+            viewport.anchoredPosition = new Vector2(first.min.x - parent.rect.xMin, area.max.y - parent.rect.yMax);
             viewportObject.GetComponent<Image>().color = Color.clear;
             viewportObject.GetComponent<LayoutElement>().ignoreLayout = true;
 
@@ -112,6 +133,7 @@ namespace ConfigurableQuestsLimit
                 slots[i]._index = i;
                 PositionRow((RectTransform)slots[i].transform, i);
             }
+            return true;
         }
 
         private void PositionRow(RectTransform row, int index)
