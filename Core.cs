@@ -3,7 +3,7 @@ using MelonLoader;
 using System.IO;
 using MelonLoader.Utils;
 
-[assembly: MelonInfo(typeof(ConfigurableQuestsLimit.Core), "ConfigurableQuestsLimit", "1.0.0", "somepoi", null)]
+[assembly: MelonInfo(typeof(ConfigurableQuestsLimit.Core), "ConfigurableQuestsLimit", ConfigurableQuestsLimit.ModVersion.Value, "somepoi", null)]
 [assembly: MelonGame("KisSoft", "ATLYSS")]
 
 namespace ConfigurableQuestsLimit

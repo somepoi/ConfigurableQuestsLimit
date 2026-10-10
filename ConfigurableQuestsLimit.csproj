@@ -1,26 +1,27 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="game-libs/Versions.props" />
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
     <Nullable>disable</Nullable>
     <LangVersion>latest</LangVersion>
     <IsPackable>false</IsPackable>
-    <AssemblyVersion>1.0.0</AssemblyVersion>
-    <FileVersion>1.0.0</FileVersion>
+    <Version>1.0.1</Version>
+    <AssemblyVersion>$(Version)</AssemblyVersion>
+    <FileVersion>$(Version)</FileVersion>
+    <DeployToGame Condition="'$(DeployToGame)' == ''">true</DeployToGame>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <GameDirectory Condition="'$(GameDirectory)' == ''">D:\GAMES\SteamLibrary\steamapps\common\ATLYSS</GameDirectory>
-    <ManagedDirectory>$(GameDirectory)\ATLYSS_Data\Managed</ManagedDirectory>
-    <LoaderDirectory>$(GameDirectory)\MelonLoader\net35</LoaderDirectory>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Assembly-CSharp" HintPath="$(ManagedDirectory)\Assembly-CSharp.dll" Private="false" />
-    <Reference Include="Mirror" HintPath="$(ManagedDirectory)\Mirror.dll" Private="false" />
-    <Reference Include="UnityEngine.CoreModule" HintPath="$(ManagedDirectory)\UnityEngine.CoreModule.dll" Private="false" />
-    <Reference Include="UnityEngine.UI" HintPath="$(ManagedDirectory)\UnityEngine.UI.dll" Private="false" />
-    <Reference Include="UnityEngine.UIModule" HintPath="$(ManagedDirectory)\UnityEngine.UIModule.dll" Private="false" />
-    <Reference Include="UnityEngine.InputLegacyModule" HintPath="$(ManagedDirectory)\UnityEngine.InputLegacyModule.dll" Private="false" />
-    <Reference Include="UnityEngine.TextRenderingModule" HintPath="$(ManagedDirectory)\UnityEngine.TextRenderingModule.dll" Private="false" />
-    <Reference Include="MelonLoader" HintPath="$(LoaderDirectory)\MelonLoader.dll" Private="false" />
-    <Reference Include="0Harmony" HintPath="$(LoaderDirectory)\0Harmony.dll" Private="false" />
+    <PackageReference Include="Somepoi.Atlyss.GameLibs" Version="$(GameLibsVersion)" IncludeAssets="compile" PrivateAssets="all" />
+    <!-- Download the official packages without their runtime dependency trees. -->
+    <PackageDownload Include="LavaGang.MelonLoader" Version="[$(MelonLoaderVersion)]" />
+    <PackageDownload Include="HarmonyX" Version="[$(HarmonyVersion)]" />
+    <Reference Include="MelonLoader" HintPath="$(NuGetPackageRoot)/lavagang.melonloader/$(MelonLoaderVersion)/lib/net35/MelonLoader.dll" Private="false" />
+    <Reference Include="0Harmony" HintPath="$(NuGetPackageRoot)/harmonyx/$(HarmonyVersion)/lib/netstandard2.0/0Harmony.dll" Private="false" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="Core.cs" />
     <Compile Include="ConfigurableQuestsLimitSettings.cs" />
     <Compile Include="ConfigurableQuestsLimitPatches.cs" />
@@ -32,10 +33,18 @@
     <Compile Include="QuestTrackerPager.cs" />
   </ItemGroup>
   <Target Name="ValidateGameReferences" BeforeTargets="ResolveReferences">
-    <Error Condition="!Exists('$(ManagedDirectory)\Assembly-CSharp.dll')" Text="ATLYSS assembly not found. Set GameDirectory to the ATLYSS installation directory." />
-    <Error Condition="!Exists('$(LoaderDirectory)\MelonLoader.dll')" Text="MelonLoader Mono assembly not found at $(LoaderDirectory). Install MelonLoader for ATLYSS." />
+    <Error Condition="'%(Reference.HintPath)' != '' and !Exists('%(Reference.HintPath)')"
+           Text="Reference not found: %(Reference.HintPath). Restore the pinned MelonLoader/Harmony NuGet packages." />
   </Target>
-  <Target Name="PostBuild" AfterTargets="Build">
+  <Target Name="GenerateModVersion" BeforeTargets="CoreCompile">
+    <WriteLinesToFile File="$(IntermediateOutputPath)ModVersion.g.cs"
+                      Lines="namespace ConfigurableQuestsLimit { internal static class ModVersion { internal const string Value = &quot;$(Version)&quot;%3B } }"
+                      Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <Compile Include="$(IntermediateOutputPath)ModVersion.g.cs" />
+    </ItemGroup>
+  </Target>
+  <Target Name="PostBuild" AfterTargets="Build" Condition="'$(DeployToGame)' == 'true'">
     <MakeDir Directories="$(GameDirectory)\Mods" />
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GameDirectory)\Mods" />
     <MakeDir Directories="$(GameDirectory)\UserData" />
