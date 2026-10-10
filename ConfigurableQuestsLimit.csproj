@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Nullable>disable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <IsPackable>false</IsPackable>
+    <AssemblyVersion>1.0.0</AssemblyVersion>
+    <FileVersion>1.0.0</FileVersion>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <GameDirectory Condition="'$(GameDirectory)' == ''">D:\GAMES\SteamLibrary\steamapps\common\ATLYSS</GameDirectory>
+    <ManagedDirectory>$(GameDirectory)\ATLYSS_Data\Managed</ManagedDirectory>
+    <LoaderDirectory>$(GameDirectory)\MelonLoader\net35</LoaderDirectory>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp" HintPath="$(ManagedDirectory)\Assembly-CSharp.dll" Private="false" />
+    <Reference Include="Mirror" HintPath="$(ManagedDirectory)\Mirror.dll" Private="false" />
+    <Reference Include="UnityEngine.CoreModule" HintPath="$(ManagedDirectory)\UnityEngine.CoreModule.dll" Private="false" />
+    <Reference Include="UnityEngine.UI" HintPath="$(ManagedDirectory)\UnityEngine.UI.dll" Private="false" />
+    <Reference Include="UnityEngine.UIModule" HintPath="$(ManagedDirectory)\UnityEngine.UIModule.dll" Private="false" />
+    <Reference Include="UnityEngine.InputLegacyModule" HintPath="$(ManagedDirectory)\UnityEngine.InputLegacyModule.dll" Private="false" />
+    <Reference Include="UnityEngine.TextRenderingModule" HintPath="$(ManagedDirectory)\UnityEngine.TextRenderingModule.dll" Private="false" />
+    <Reference Include="MelonLoader" HintPath="$(LoaderDirectory)\MelonLoader.dll" Private="false" />
+    <Reference Include="0Harmony" HintPath="$(LoaderDirectory)\0Harmony.dll" Private="false" />
+    <Compile Include="Core.cs" />
+    <Compile Include="ConfigurableQuestsLimitSettings.cs" />
+    <Compile Include="ConfigurableQuestsLimitPatches.cs" />
+    <Compile Include="QuestJournalPatches.cs" />
+    <Compile Include="QuestLogView.cs" />
+    <Compile Include="QuestLogLayout.cs" />
+    <Compile Include="QuestTrackerPagination.cs" />
+    <Compile Include="QuestTrackerPatches.cs" />
+    <Compile Include="QuestTrackerPager.cs" />
+  </ItemGroup>
+  <Target Name="ValidateGameReferences" BeforeTargets="ResolveReferences">
+    <Error Condition="!Exists('$(ManagedDirectory)\Assembly-CSharp.dll')" Text="ATLYSS assembly not found. Set GameDirectory to the ATLYSS installation directory." />
+    <Error Condition="!Exists('$(LoaderDirectory)\MelonLoader.dll')" Text="MelonLoader Mono assembly not found at $(LoaderDirectory). Install MelonLoader for ATLYSS." />
+  </Target>
+  <Target Name="PostBuild" AfterTargets="Build">
+    <MakeDir Directories="$(GameDirectory)\Mods" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GameDirectory)\Mods" />
+    <MakeDir Directories="$(GameDirectory)\UserData" />
+    <Copy SourceFiles="config\ConfigurableQuestsLimit.cfg" DestinationFolder="$(GameDirectory)\UserData"
+          Condition="!Exists('$(GameDirectory)\UserData\ConfigurableQuestsLimit.cfg')" />
+  </Target>
+</Project>
