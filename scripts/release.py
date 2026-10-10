@@ -10,13 +10,13 @@ import xml.etree.ElementTree as ET
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = re.compile(r"v?((?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*))\Z")
+VERSION = re.compile(r"((?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*))\Z")
 
 
 def normalize_version(value):
     match = VERSION.fullmatch(value)
     if not match or any(int(part) > 65534 for part in match[1].split(".")):
-        raise ValueError(f"Expected a stable version such as 1.0.0 or v1.0.0, got {value!r}")
+        raise ValueError(f"Expected a stable version such as 1.0.1 without a prefix, got {value!r}")
     return match[1]
 
 
@@ -47,7 +47,7 @@ def extract_changelog(text, version):
             heading = re.match(r"^(#{1,2})\s+(.+?)\s*#*\s*$", line)
             if heading:
                 headings.append((index, len(heading[1]), heading[2]))
-    matches = [heading for heading in headings if heading[2] in (version, f"v{version}")]
+    matches = [heading for heading in headings if heading[2] == version]
     if len(matches) != 1:
         raise ValueError(f"Expected exactly one changelog section for {version}, found {len(matches)}")
     start, level, _ = matches[0]
@@ -77,22 +77,15 @@ def metadata(root, tag, destination):
 
 def package(root, version, destination):
     version = normalize_version(version)
-    files = {
-        root / "bin/Release/netstandard2.1/ConfigurableQuestsLimit.dll": "Mods/ConfigurableQuestsLimit.dll",
-        root / "config/ConfigurableQuestsLimit.cfg": "UserData/ConfigurableQuestsLimit.cfg",
-        root / "README.md": "README.md",
-        root / "CHANGELOG.md": "CHANGELOG.md",
-        root / "LICENSE": "LICENSE",
-    }
-    for source in files:
-        if not source.is_file():
-            raise FileNotFoundError(f"Required release file is missing: {source}")
+    source = root / "bin/Release/netstandard2.1/ConfigurableQuestsLimit.dll"
+    if not source.is_file():
+        raise FileNotFoundError(f"Required release file is missing: {source}")
     destination.mkdir(parents=True, exist_ok=True)
     archive = destination / f"ConfigurableQuestsLimit-{version}.zip"
     with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as zipped:
-        for source, target in files.items():
-            zipped.write(source, target)
+        zipped.write(source, source.name)
     print(f"Created {archive}")
+    print(f"Archive contains only {source.name}")
     return archive
 
 
