@@ -1,7 +1,0 @@
-public enum QuestTriggerCondition : byte
-{
-	ENABLE_BEFORE_QUEST = 0,
-	ENABLE_DURING_QUEST = 1,
-	ENABLE_AFTER_COMPLETED_QUEST = 2,
-	ENABLE_DURING_AND_AFTER_QUEST = 3
-}

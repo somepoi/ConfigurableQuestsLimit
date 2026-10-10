@@ -399,3 +399,8 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# Local CI tooling and release packages
+.ci/
+dist/
+.atlyss_decompiled/
