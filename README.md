@@ -1,5 +1,7 @@
 # ConfigurableQuestsLimit
 
+[![Nexus Mods](https://img.shields.io/badge/Nexus%20Mods-Download-DA8E35?logo=nexusmods&logoColor=white)](https://www.nexusmods.com/atlyss/mods/41?tab=description)
+
 A MelonLoader mod for ATLYSS that lets you configure the active quest limit or
 enable unlimited quests, with an expanded quest journal and paginated tracker.
 
