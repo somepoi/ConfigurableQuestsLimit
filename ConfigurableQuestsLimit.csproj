@@ -16,9 +16,9 @@
   <ItemGroup>
     <PackageReference Include="Somepoi.Atlyss.GameLibs" Version="$(GameLibsVersion)" IncludeAssets="compile" PrivateAssets="all" />
     <!-- Download the official packages without their runtime dependency trees. -->
-    <PackageDownload Include="LavaGang.MelonLoader" Version="[$(MelonLoaderVersion)]" />
+    <PackageDownload Include="BepInEx.BaseLib" Version="[$(BepInExVersion)]" />
     <PackageDownload Include="HarmonyX" Version="[$(HarmonyVersion)]" />
-    <Reference Include="MelonLoader" HintPath="$(NuGetPackageRoot)/lavagang.melonloader/$(MelonLoaderVersion)/lib/net35/MelonLoader.dll" Private="false" />
+    <Reference Include="BepInEx" HintPath="$(NuGetPackageRoot)/bepinex.baselib/$(BepInExVersion)/lib/net35/BepInEx.dll" Private="false" />
     <Reference Include="0Harmony" HintPath="$(NuGetPackageRoot)/harmonyx/$(HarmonyVersion)/lib/netstandard2.0/0Harmony.dll" Private="false" />
   </ItemGroup>
   <ItemGroup>
@@ -34,7 +34,7 @@
   </ItemGroup>
   <Target Name="ValidateGameReferences" BeforeTargets="ResolveReferences">
     <Error Condition="'%(Reference.HintPath)' != '' and !Exists('%(Reference.HintPath)')"
-           Text="Reference not found: %(Reference.HintPath). Restore the pinned MelonLoader/Harmony NuGet packages." />
+           Text="Reference not found: %(Reference.HintPath). Restore the pinned BepInEx/Harmony NuGet packages." />
   </Target>
   <Target Name="GenerateModVersion" BeforeTargets="CoreCompile">
     <WriteLinesToFile File="$(IntermediateOutputPath)ModVersion.g.cs"
@@ -45,10 +45,7 @@
     </ItemGroup>
   </Target>
   <Target Name="PostBuild" AfterTargets="Build" Condition="'$(DeployToGame)' == 'true'">
-    <MakeDir Directories="$(GameDirectory)\Mods" />
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GameDirectory)\Mods" />
-    <MakeDir Directories="$(GameDirectory)\UserData" />
-    <Copy SourceFiles="config\ConfigurableQuestsLimit.cfg" DestinationFolder="$(GameDirectory)\UserData"
-          Condition="!Exists('$(GameDirectory)\UserData\ConfigurableQuestsLimit.cfg')" />
+    <MakeDir Directories="$(GameDirectory)\BepInEx\plugins" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GameDirectory)\BepInEx\plugins" />
   </Target>
 </Project>

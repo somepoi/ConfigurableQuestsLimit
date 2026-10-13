@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using MelonLoader;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -110,7 +109,7 @@ namespace ConfigurableQuestsLimit
             catch (Exception error)
             {
                 failed = true;
-                MelonLogger.Error($"Unable to paginate quest tracker: {error}");
+                Core.Log.LogError($"Unable to paginate quest tracker: {error}");
             }
         }
 

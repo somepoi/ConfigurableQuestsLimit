@@ -1,30 +1,29 @@
-using MelonLoader;
-
-using System.IO;
-using MelonLoader.Utils;
-
-[assembly: MelonInfo(typeof(ConfigurableQuestsLimit.Core), "ConfigurableQuestsLimit", ConfigurableQuestsLimit.ModVersion.Value, "somepoi", null)]
-[assembly: MelonGame("KisSoft", "ATLYSS")]
+using BepInEx;
+using BepInEx.Configuration;
+using BepInEx.Logging;
+using HarmonyLib;
 
 namespace ConfigurableQuestsLimit
 {
-    public class Core : MelonMod
+    [BepInPlugin("somepoi.ConfigurableQuestsLimit", "ConfigurableQuestsLimit", ModVersion.Value)]
+    [BepInProcess("ATLYSS.exe")]
+    public class Core : BaseUnityPlugin
     {
-        private MelonPreferences_Entry<int> maxActiveQuests;
-        private MelonPreferences_Entry<bool> unlimitedQuests;
+        internal static ManualLogSource Log { get; private set; }
+        private ConfigEntry<int> maxActiveQuests;
+        private ConfigEntry<bool> unlimitedQuests;
 
-        public override void OnInitializeMelon()
+        private void Awake()
         {
-            string configPath = Path.Combine(MelonEnvironment.UserDataDirectory, "ConfigurableQuestsLimit.cfg");
-            var category = MelonPreferences.CreateCategory("ConfigurableQuestsLimit");
-            maxActiveQuests = category.CreateEntry("MaxActiveQuests", ConfigurableQuestsLimitSettings.DefaultMaxActiveQuests,
-                description: "Maximum simultaneous quests when UnlimitedQuests is false. Must be at least 1.");
-            unlimitedQuests = category.CreateEntry("UnlimitedQuests", false,
-                description: "Allow unlimited simultaneous quests, ignoring MaxActiveQuests.");
-            category.SetFilePath(configPath);
+            Log = Logger;
+            maxActiveQuests = Config.Bind("ConfigurableQuestsLimit", "MaxActiveQuests", ConfigurableQuestsLimitSettings.DefaultMaxActiveQuests,
+                "Maximum simultaneous quests when UnlimitedQuests is false. Must be at least 1.");
+            unlimitedQuests = Config.Bind("ConfigurableQuestsLimit", "UnlimitedQuests", false,
+                "Allow unlimited simultaneous quests, ignoring MaxActiveQuests.");
             ApplySettings();
-            category.SaveToFile();
-            LoggerInstance.Msg($"Active quest limit: {(ConfigurableQuestsLimitSettings.UnlimitedQuests ? "unlimited" : ConfigurableQuestsLimitSettings.MaxActiveQuests.ToString())}.");
+            Config.Save();
+            new Harmony(Info.Metadata.GUID).PatchAll();
+            Logger.LogInfo($"Active quest limit: {(ConfigurableQuestsLimitSettings.UnlimitedQuests ? "unlimited" : ConfigurableQuestsLimitSettings.MaxActiveQuests.ToString())}.");
         }
 
         private void ApplySettings()
@@ -33,7 +32,7 @@ namespace ConfigurableQuestsLimit
                 return;
             if (maxActiveQuests.Value < 1)
             {
-                LoggerInstance.Warning($"MaxActiveQuests must be positive, using {ConfigurableQuestsLimitSettings.DefaultMaxActiveQuests}.");
+                Logger.LogWarning($"MaxActiveQuests must be positive, using {ConfigurableQuestsLimitSettings.DefaultMaxActiveQuests}.");
                 maxActiveQuests.Value = ConfigurableQuestsLimitSettings.DefaultMaxActiveQuests;
             }
             ConfigurableQuestsLimitSettings.Configure(maxActiveQuests.Value, unlimitedQuests.Value);

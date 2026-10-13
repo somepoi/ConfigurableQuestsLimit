@@ -1,14 +1,14 @@
-name: Build and release
+name: Build and release BepInEx
 
 on:
   push:
-    branches: ['**']
-    tags: ['[0-9]*.[0-9]*.[0-9]*']
+    branches: ['BepInEx']
+    tags: ['bepinex-[0-9]*.[0-9]*.[0-9]*']
   pull_request:
   workflow_dispatch:
     inputs:
       publish:
-        description: Publish to GitHub and Nexus
+        description: Publish to GitHub and Nexus (if configured)
         type: boolean
         default: false
 
@@ -16,7 +16,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-bepinex-${{ github.ref }}
   cancel-in-progress: ${{ github.ref_type != 'tag' }}
 
 jobs:
@@ -35,6 +35,8 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+      - name: Test release scripts
+        run: python -m unittest discover -s scripts -p test_release.py
       - name: Validate version and extract changelog
         id: metadata
         env:
@@ -58,19 +60,19 @@ jobs:
         env:
           VERSION: ${{ steps.metadata.outputs.version }}
         run: |
-          python -m zipfile --list "dist/ConfigurableQuestsLimit-$VERSION.zip"
+          python -m zipfile --list "dist/ConfigurableQuestsLimit-BepInEx-$VERSION.zip"
           {
-            echo "Release title: $VERSION"
+            echo "Release title: $VERSION (BepInEx)"
           } >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         with:
-          name: mod-package
-          path: dist/ConfigurableQuestsLimit-${{ steps.metadata.outputs.version }}.zip
+          name: mod-package-bepinex
+          path: dist/ConfigurableQuestsLimit-BepInEx-${{ steps.metadata.outputs.version }}.zip
           if-no-files-found: error
           retention-days: 7
   publish:
     needs: build
-    if: github.ref_type == 'tag' && (github.event_name == 'push' || inputs.publish)
+    if: github.ref_type == 'tag' && startsWith(github.ref_name, 'bepinex-') && (github.event_name == 'push' || inputs.publish)
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -81,21 +83,6 @@ jobs:
       cancel-in-progress: false
       queue: max
     steps:
-      - name: Prevent duplicate Nexus uploads on reruns
-        run: |
-          if [ "$GITHUB_RUN_ATTEMPT" != '1' ]; then
-            echo 'Check Nexus before retrying. Start a fresh manual run only if this version was not uploaded.' >&2
-            exit 1
-          fi
-      - name: Check Nexus configuration
-        env:
-          NEXUS_API_KEY: ${{ secrets.NEXUSMODS_API_KEY }}
-          NEXUS_FILE_ID: ${{ vars.NEXUSMODS_FILE_ID }}
-        run: |
-          if [ -z "$NEXUS_API_KEY" ] || [ -z "$NEXUS_FILE_ID" ]; then
-            echo 'Set secret NEXUSMODS_API_KEY and variable NEXUSMODS_FILE_ID.' >&2
-            exit 1
-          fi
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
@@ -104,7 +91,7 @@ jobs:
           python-version: '3.13'
       - uses: actions/download-artifact@v4
         with:
-          name: mod-package
+          name: mod-package-bepinex
           path: dist
       - name: Read the tagged changelog
         id: notes
@@ -115,11 +102,28 @@ jobs:
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3
         with:
           tag_name: ${{ github.ref_name }}
-          name: ${{ needs.build.outputs.version }}
+          name: ${{ needs.build.outputs.version }} (BepInEx)
           body_path: dist/release-notes.md
-          files: dist/ConfigurableQuestsLimit-${{ needs.build.outputs.version }}.zip
+          files: dist/ConfigurableQuestsLimit-BepInEx-${{ needs.build.outputs.version }}.zip
           fail_on_unmatched_files: true
+      - name: Prevent duplicate Nexus uploads on reruns
+        if: vars.NEXUSMODS_BEPINEX_FILE_ID != ''
+        run: |
+          if [ "$GITHUB_RUN_ATTEMPT" != '1' ]; then
+            echo 'Check Nexus before retrying. Start a fresh manual run only if this version was not uploaded.' >&2
+            exit 1
+          fi
+      - name: Check Nexus configuration
+        if: vars.NEXUSMODS_BEPINEX_FILE_ID != ''
+        env:
+          NEXUS_API_KEY: ${{ secrets.NEXUSMODS_API_KEY }}
+        run: |
+          if [ -z "$NEXUS_API_KEY" ]; then
+            echo 'Set secret NEXUSMODS_API_KEY.' >&2
+            exit 1
+          fi
       - name: Resolve Nexus global mod ID
+        if: vars.NEXUSMODS_BEPINEX_FILE_ID != ''
         id: nexus
         shell: python
         env:
@@ -137,14 +141,15 @@ jobs:
           with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
               output.write(f'mod_id={mod_id}\n')
       - name: Upload ZIP and changelog to Nexus
+        if: vars.NEXUSMODS_BEPINEX_FILE_ID != ''
         uses: Nexus-Mods/upload-action@c96019556046053aa26044b44396cd38929daf23 # v1.0.0-beta.10
         with:
           api_key: ${{ secrets.NEXUSMODS_API_KEY }}
-          file_id: ${{ vars.NEXUSMODS_FILE_ID }}
+          file_id: ${{ vars.NEXUSMODS_BEPINEX_FILE_ID }}
           mod_id: ${{ steps.nexus.outputs.mod_id }}
-          filename: dist/ConfigurableQuestsLimit-${{ needs.build.outputs.version }}.zip
+          filename: dist/ConfigurableQuestsLimit-BepInEx-${{ needs.build.outputs.version }}.zip
           version: ${{ needs.build.outputs.version }}
-          display_name: ConfigurableQuestsLimit ${{ needs.build.outputs.version }}
+          display_name: ConfigurableQuestsLimit ${{ needs.build.outputs.version }} (BepInEx)
           description: ${{ steps.notes.outputs.changelog }}
           changelog: ${{ steps.notes.outputs.changelog }}
           category: main

@@ -25,8 +25,11 @@ def validate_project_version(project, tag=None):
     if not version:
         raise ValueError("The project must define a Version property")
     version = normalize_version(version)
-    if tag is not None and normalize_version(tag) != version:
-        raise ValueError(f"Tag {tag!r} does not match project Version {version!r}")
+    if tag is not None:
+        if not tag.startswith("bepinex-"):
+            raise ValueError(f"Expected a BepInEx tag such as bepinex-{version}, got {tag!r}")
+        if normalize_version(tag.removeprefix("bepinex-")) != version:
+            raise ValueError(f"Tag {tag!r} does not match project Version {version!r}")
     return version
 
 
@@ -81,7 +84,7 @@ def package(root, version, destination):
     if not source.is_file():
         raise FileNotFoundError(f"Required release file is missing: {source}")
     destination.mkdir(parents=True, exist_ok=True)
-    archive = destination / f"ConfigurableQuestsLimit-{version}.zip"
+    archive = destination / f"ConfigurableQuestsLimit-BepInEx-{version}.zip"
     with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as zipped:
         zipped.write(source, source.name)
     print(f"Created {archive}")

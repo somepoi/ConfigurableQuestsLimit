@@ -1,5 +1,4 @@
 using System;
-using MelonLoader;
 using UnityEngine;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
@@ -60,7 +59,7 @@ namespace ConfigurableQuestsLimit
             catch (Exception error)
             {
                 failed = true;
-                MelonLogger.Error($"Unable to expand quest journal: {error}");
+                Core.Log.LogError($"Unable to expand quest journal: {error}");
             }
         }
 
@@ -95,7 +94,7 @@ namespace ConfigurableQuestsLimit
                 {
                     layoutWarningLogged = true;
                     var firstRect = (RectTransform)slots[0].transform;
-                    MelonLogger.Warning($"Quest journal layout is not ready, will retry. Slots: {slots.Length}, " +
+                    Core.Log.LogWarning($"Quest journal layout is not ready, will retry. Slots: {slots.Length}, " +
                         $"parent rect: {parent.rect.size}, first slot rect: {firstRect.rect.size}, " +
                         $"measured row: {rowWidth}x{rowHeight}, stride: {stride}.");
                 }

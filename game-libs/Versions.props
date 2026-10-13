@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
     <GameLibsVersion>0.21474249.0</GameLibsVersion>
-    <MelonLoaderVersion>0.7.3</MelonLoaderVersion>
-    <HarmonyVersion>2.10.2</HarmonyVersion>
+    <BepInExVersion>5.4.20</BepInExVersion>
+    <HarmonyVersion>2.9.0</HarmonyVersion>
   </PropertyGroup>
 </Project>
