@@ -5,6 +5,8 @@
 ## Description
 Mod for ATLYSS that lets you configure the active quest limit remove the limit completely.
 
+MelonLoader version. The BepInEx version is on [BepInEx](https://github.com/somepoi/ConfigurableQuestsLimit/tree/BepInEx).
+
 Quests limit is tied to the client, so should be multiplayer-compatible.
 
 ## Requirements
